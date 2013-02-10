@@ -32,14 +32,14 @@ Copyright_License {
 
 #include <jni.h>
 
-#define NUMBER_OF_VOLTAGES 1
+#define NUMBER_OF_VOLTAGES 3
 
 class VoltageDevice final : private VoltageListener {
   unsigned index;
   Java::Object obj;
   fixed offset;
   fixed factor;
-  WindowFilter<16> voltage_filter[NUMBER_OF_VOLTAGES];
+  WindowFilter<4> voltage_filter[NUMBER_OF_VOLTAGES];
   WindowFilter<64> temperature_filter;
 
 public:

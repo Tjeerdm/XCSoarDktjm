@@ -44,6 +44,8 @@ final class Voltage extends Thread {
 
   private static final String TAG = "XCSoar";
 
+  private AnalogInput h_current;
+  private AnalogInput h_v6;
   private AnalogInput h_volt;
   private AnalogInput h_temp;
   private DigitalOutput h_led;
@@ -57,6 +59,15 @@ final class Voltage extends Thread {
 
     // when you want to use other pins: you got the source ....
     h_volt = ioio.openAnalogInput(40);
+    h_v6 = ioio.openAnalogInput(41);
+    if (h_volt == null || h_v6 == null) return;
+
+    h_current = ioio.openAnalogInput(42);
+    if (h_current != null) {
+      int i = (int)(h_current.read() * 1024);
+      if (i < 100) { h_current.close(); h_current = null; }
+    }
+
     // When pin 39 cannot be pulled-up when used as digital input and is between 0.3 and 0.6 Volt
     // when using analog input then assume there is a kty83 temperature sensor there.
     DigitalInput h_di = ioio.openDigitalInput(39, DigitalInput.Spec.Mode.PULL_UP);
@@ -89,12 +100,11 @@ final class Voltage extends Thread {
   }
 
   public void close() {
-    if (h_volt != null)
-      h_volt.close();
-    if (h_temp != null)
-      h_temp.close();
-    if (h_led != null)
-      h_led.close();
+    if (h_current != null) h_current.close();
+    if (h_v6 != null)   h_v6.close();
+    if (h_volt != null) h_volt.close();
+    if (h_temp != null) h_temp.close();
+    if (h_led != null)  h_led.close();
 
     interrupt();
 
@@ -107,12 +117,27 @@ final class Voltage extends Thread {
   @Override public void run() {
     try {
       boolean led = false;
+      int count = 0; int c = 0;
       while (true) {
         int v = -1; int t = -1;
-        if (h_volt != null) v = (int)(h_volt.read() * 1024);
+        switch (count) {
+        case 0:
+        case 2:
+          v = (int)(h_volt.read() * 1024); c = 0; count++;
+          break;
+        case 1:
+        case 3:
+          v = (int)(h_v6.read() * 1024); c = 1;
+          if (h_current == null && count == 3) count = 0; else count++;
+          break;
+        case 4:
+          v = (int)(h_current.read() * 1024); c = 2; count = 0;
+          break;
+        default:
+        }
         if (h_temp != null) t = (int)(h_temp.read() * 1024);
         if (h_led  != null) { h_led.write(led); led = !led; }
-        listener.onVoltageValues(t, 0, v);
+        listener.onVoltageValues(t, c, v);
         sleep(sleeptime);
       }
     } catch (ConnectionLostException e) {

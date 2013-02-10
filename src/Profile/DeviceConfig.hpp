@@ -67,6 +67,7 @@ struct DeviceConfig {
     NUNCHUCK,
     I2CPRESSURESENSOR,
     IOIOVOLTAGE,
+    ADCAIRSPEED,
 
     /**
      * Attempt to auto-discover the GPS source.

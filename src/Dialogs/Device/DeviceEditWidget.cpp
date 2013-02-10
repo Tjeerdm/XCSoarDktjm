@@ -74,6 +74,7 @@ static constexpr struct {
 #endif
   { DeviceConfig::PortType::I2CPRESSURESENSOR, N_("IOIO i2c pressure sensor") },
   { DeviceConfig::PortType::IOIOVOLTAGE, N_("IOIO voltage sensor") },
+  { DeviceConfig::PortType::ADCAIRSPEED, N_("IOIO airspeed sensor mpx7002dp") },
 #endif
 
   /* label not translated for now, until we have a TCP/UDP port
@@ -362,6 +363,7 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
   case DeviceConfig::PortType::NUNCHUCK:
   case DeviceConfig::PortType::I2CPRESSURESENSOR:
   case DeviceConfig::PortType::IOIOVOLTAGE:
+  case DeviceConfig::PortType::ADCAIRSPEED:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
   case DeviceConfig::PortType::PTY:
@@ -699,6 +701,7 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df)
   case DeviceConfig::PortType::NUNCHUCK:
   case DeviceConfig::PortType::I2CPRESSURESENSOR:
   case DeviceConfig::PortType::IOIOVOLTAGE:
+  case DeviceConfig::PortType::ADCAIRSPEED:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
   case DeviceConfig::PortType::RFCOMM_SERVER:

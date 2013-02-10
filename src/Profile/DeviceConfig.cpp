@@ -40,6 +40,7 @@ static const TCHAR *const port_type_strings[] = {
   _T("nunchuck"),
   _T("i2c_baro"),
   _T("ioio_voltage"),
+  _T("adc_airspeed"),
   _T("auto"),
   _T("internal"),
   _T("tcp_listener"),
@@ -67,6 +68,7 @@ DeviceConfig::IsAvailable() const
   case PortType::NUNCHUCK:
   case PortType::I2CPRESSURESENSOR:
   case PortType::IOIOVOLTAGE:
+  case PortType::ADCAIRSPEED:
     return IsAndroid() && HasIOIOLib();
 
   case PortType::AUTO:
@@ -112,6 +114,7 @@ DeviceConfig::ShouldReopenOnTimeout() const
   case PortType::NUNCHUCK:
   case PortType::I2CPRESSURESENSOR:
   case PortType::IOIOVOLTAGE:
+  case PortType::ADCAIRSPEED:
     /* errors on these are detected automatically by the driver */
     return false;
 
@@ -167,6 +170,9 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const
 
   case PortType::IOIOVOLTAGE:
     return _T("IOIO voltage sensor");
+
+  case PortType::ADCAIRSPEED:
+    return _T("IOIO airspeed sensor mpx7002dp");
 
   case PortType::AUTO:
     return _("GPS Intermediate Driver");

@@ -93,7 +93,7 @@ VoltageDevice::onVoltageValues(int temp_adc, int voltage_index, int volt_adc)
   if (factor == fixed(0)) {
     // Set default for temp sensor only when sensor present.
     if (temp_adc >= 0 && offset == fixed(0)) offset = fixed(-130);
-    factor = fixed(0.01599561738);
+    factor = fixed(0.016666);
     basic.ProvideSensorCalibration(factor, offset);
   }
 
@@ -108,7 +108,12 @@ VoltageDevice::onVoltageValues(int temp_adc, int voltage_index, int volt_adc)
   }
 
   if ((unsigned)voltage_index < NUMBER_OF_VOLTAGES) {
-    fixed v = factor * volt_adc;
+    fixed v;
+    switch (voltage_index) {
+      case 0: v = factor * volt_adc; break;
+      case 1: v = fixed(0.0071744) * volt_adc; break;
+      case 2: v = (volt_adc - (250*1024)/331) * fixed(0.001786); break; // ACS712 current sensor
+    }
     if (voltage_filter[voltage_index].Update(v))
       v = voltage_filter[voltage_index].Average();
     basic.voltage = v;

@@ -160,6 +160,7 @@ OpenPortInternal(const DeviceConfig &config, DataHandler &handler)
   case DeviceConfig::PortType::NUNCHUCK:
   case DeviceConfig::PortType::I2CPRESSURESENSOR:
   case DeviceConfig::PortType::IOIOVOLTAGE:
+  case DeviceConfig::PortType::ADCAIRSPEED:
     break;
 
   case DeviceConfig::PortType::TCP_LISTENER: {

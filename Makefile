@@ -833,6 +833,8 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/NunchuckDevice.cpp \
 	$(SRC)/Android/NativeVoltageListener.cpp \
 	$(SRC)/Android/VoltageDevice.cpp \
+	$(SRC)/Android/NativeAdcAirspeedListener.cpp \
+	$(SRC)/Android/AdcAirspeedDevice.cpp \
 	$(SRC)/Android/IOIOHelper.cpp
 endif
 

@@ -58,6 +58,11 @@ Copyright_License {
 #include "Android/I2CbaroDevice.hpp"
 #include "Android/NunchuckDevice.hpp"
 #include "Android/VoltageDevice.hpp"
+#include "Android/AdcAirspeedDevice.hpp"
+
+
+#include "LocalPath.hpp"
+#include <windef.h> /* for MAX_PATH */
 #endif
 
 #include <assert.h>
@@ -105,6 +110,7 @@ DeviceDescriptor::DeviceDescriptor(unsigned _index)
    droidsoar_v2(nullptr),
    nunchuck(nullptr),
    voltage(nullptr),
+   adcairspeed(nullptr),
 #endif
 #endif
    ticker(false), borrowed(false)
@@ -158,6 +164,9 @@ DeviceDescriptor::GetState() const
     return PortState::READY;
 
   if (voltage != nullptr)
+    return PortState::READY;
+
+  if (adcairspeed != nullptr)
     return PortState::READY;
 #endif
 #endif
@@ -344,6 +353,54 @@ DeviceDescriptor::OpenNunchuck()
 }
 
 bool
+DeviceDescriptor::OpenAdcAirspeed()
+{
+#ifdef IOIOLIB
+  if (is_simulator())
+    return true;
+
+  if (ioio_helper == nullptr)
+    return false;
+
+  int ias_pin = 0, iat_pin = 0;
+
+  // TODO: get configuration from flash prom on IOIO board.
+  char * config_info = new char[4096];
+  
+  if (!config_info) return false;
+  else {
+#define MY_CONFIG_FILE "IOIO-analog-airspeed-sensor.txt"
+    char path[MAX_PATH];
+    LocalPath(path, MY_CONFIG_FILE);
+    FILE *fp = fopen(path, "r");
+
+    memset(config_info, 0, 4096);
+    fread(config_info, 1, 4096, fp);
+    if (fp) fclose(fp);
+//    if (strncmp(config_info, "#"MY_CONFIG_FILE, strlen(MY_CONFIG_FILE)+1)) return false;
+    if (strncmp(config_info+1, MY_CONFIG_FILE, strlen(MY_CONFIG_FILE))) return false;
+  
+    char *ias_txt = strstr(config_info, "ias_pin=");
+    char *iat_txt = strstr(config_info, "iat_pin=");
+    if (!ias_txt || !iat_txt) return false;
+    ias_pin = atoi(ias_txt + 8);
+    iat_pin = atoi(iat_txt + 8);
+    if (ias_pin<31 || ias_pin>46) return false;
+    if (iat_pin<31 || iat_pin>46) return false;
+  }
+LogStartUp("new AdcAirspeedDevice: ias_pin=%d, iat_pin=%d\n", ias_pin, iat_pin);
+  adcairspeed = new AdcAirspeedDevice(GetIndex(), Java::GetEnv(),
+                                  ioio_helper->GetHolder(),
+                                  config_info, ias_pin, iat_pin,
+                                  2); // sample_rate
+LogStartUp("new AdcAirspeedDevice success\n");
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool
 DeviceDescriptor::OpenVoltage()
 {
 #ifdef IOIOLIB
@@ -382,6 +439,9 @@ DeviceDescriptor::DoOpen(OperationEnvironment &env)
 
   if (config.port_type == DeviceConfig::PortType::IOIOVOLTAGE)
     return OpenVoltage();
+
+  if (config.port_type == DeviceConfig::PortType::ADCAIRSPEED)
+    return OpenAdcAirspeed();
 
   reopen_clock.Update();
 
@@ -463,6 +523,8 @@ DeviceDescriptor::Close()
   delete voltage;
   voltage = nullptr;
 
+  delete adcairspeed;
+  adcairspeed = nullptr;
 #endif
 
 #endif

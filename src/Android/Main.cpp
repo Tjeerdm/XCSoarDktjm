@@ -67,6 +67,8 @@ Copyright_License {
 #include "NunchuckDevice.hpp"
 #include "NativeVoltageListener.hpp"
 #include "VoltageDevice.hpp"
+#include "NativeAdcAirspeedListener.hpp"
+#include "AdcAirspeedDevice.hpp"
 #endif
 
 #ifndef NDEBUG
@@ -130,6 +132,8 @@ Java_org_xcsoar_NativeView_initializeNative(JNIEnv *env, jobject obj,
   NunchuckDevice::Initialise(env);
   NativeVoltageListener::Initialise(env);
   VoltageDevice::Initialise(env);
+  NativeAdcAirspeedListener::Initialise(env);
+  AdcAirspeedDevice::Initialise(env);
 #endif
 
   context = new Context(env, _context);
@@ -220,6 +224,8 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   NativeNunchuckListener::Deinitialise(env);
   VoltageDevice::Deinitialise(env);
   NativeVoltageListener::Deinitialise(env);
+  AdcAirspeedDevice::Deinitialise(env);
+  NativeAdcAirspeedListener::Deinitialise(env);
   IOIOHelper::Deinitialise(env);
 #endif
   BluetoothHelper::Deinitialise(env);
