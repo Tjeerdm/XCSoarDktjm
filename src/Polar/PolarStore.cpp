@@ -273,6 +273,9 @@ static constexpr PolarStore::Item internal_polars[] =
 
   // from marius@sargevicius.com
   { _T("LAK-12"),  430, 190, 75, -0.48, 125, -0.88, 175, -1.97, 14.63, 48.611, 114 },
+
+  // from factory polar
+  { _T("Kiwi"),  350, 0, 85, -0.70, 116, -1.00, 150, -1.80, 11.03, 0.0, 92 },
 };
 
 const PolarStore::Item &
