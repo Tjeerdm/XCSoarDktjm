@@ -49,7 +49,19 @@ UpdateInfoBoxGLoad(InfoBoxData &data)
   }
 
   // Set Value
-  data.SetValue(_T("%2.2f"), CommonInterface::Basic().acceleration.g_load);
+  data.SetValue(_T("%1.3f"), CommonInterface::Basic().acceleration.g_load);
+}
+
+static void displayVoltage(InfoBoxData &data, fixed v)
+{
+  if (v >= fixed(8) )
+    data.SetValue(_T("%02.2fV"), v);
+  else {
+    if (v >= fixed(0) )
+      data.SetValue(_T("%01.3fV"), v);
+    else
+      data.SetValue(_T("%1.1f A"), v);
+  }
 }
 
 void
@@ -67,10 +79,9 @@ UpdateInfoBoxBattery(InfoBoxData &data)
     case Power::External::ON:
       if (!CommonInterface::Basic().voltage_available)
         data.SetComment(_("AC ON"));
-      else{
+      else {
         DisplaySupplyVoltageAsValue = true;
-        data.SetValue(_T("%2.1fV"),
-                          CommonInterface::Basic().voltage);
+        displayVoltage(data, CommonInterface::Basic().voltage);
       }
       break;
     case Power::External::UNKNOWN:
@@ -110,7 +121,7 @@ UpdateInfoBoxBattery(InfoBoxData &data)
 #endif
 
   if (CommonInterface::Basic().voltage_available) {
-    data.SetValue(_T("%2.1fV"), CommonInterface::Basic().voltage);
+    displayVoltage(data, CommonInterface::Basic().voltage);
     return;
   } else if (CommonInterface::Basic().battery_level_available) {
     data.SetValue(_T("%.0f%%"), CommonInterface::Basic().battery_level);
