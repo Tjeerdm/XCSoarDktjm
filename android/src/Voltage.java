@@ -49,7 +49,7 @@ final class Voltage extends Thread {
   private AnalogInput h_volt;
   private AnalogInput h_temp;
   private DigitalOutput h_led;
-  private final int sleeptime;
+  private int sleeptime = 1000;
 
   private final Listener listener;
 
@@ -60,22 +60,20 @@ final class Voltage extends Thread {
     // when you want to use other pins: you got the source ....
     h_volt = ioio.openAnalogInput(40);
     h_v6 = ioio.openAnalogInput(41);
-    if (h_volt == null || h_v6 == null) return;
-
     h_current = ioio.openAnalogInput(42);
-    if (h_current != null) {
-      int i = (int)(h_current.read() * 1024);
-      if (i < 100) { h_current.close(); h_current = null; }
-    }
 
     // When pin 39 cannot be pulled-up when used as digital input and is between 0.3 and 0.6 Volt
     // when using analog input then assume there is a kty83 temperature sensor there.
     DigitalInput h_di = ioio.openDigitalInput(39, DigitalInput.Spec.Mode.PULL_UP);
     try {
+      // current available ?
+      int i = (int)(h_current.read() * 1024);
+      if (i < 100) { h_current.close(); h_current = null; }
+
       if (h_di != null && !h_di.read()) {
         h_di.close();
         h_temp = ioio.openAnalogInput(39);
-        for (int i=0; h_temp != null && i<100; i++) {
+        for (i=0; h_temp != null && i<100; i++) {
           float v = h_temp.getVoltage();
           if (v < 0.3 || v > 0.6) { h_temp.close(); h_temp = null; break; }
         }
@@ -91,8 +89,6 @@ final class Voltage extends Thread {
 
     if (sample_rate != 0)
       sleeptime = 60000 / sample_rate;
-    else
-      sleeptime = 1000;
 
     listener = _listener;
 
