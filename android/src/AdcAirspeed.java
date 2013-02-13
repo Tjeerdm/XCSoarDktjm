@@ -91,6 +91,7 @@ final class AdcAirspeed extends Thread {
   private int ias_pin, iat_pin;
   private AnalogInput h_iat = null; // inside air, sensor temperature
   private AnalogInput h_ias = null; // airspeed sensor mpxv7002 or mpx5010
+  private final int ias_samples = 16;
   private final Listener listener;
   
   public AdcAirspeed(IOIO _ioio, int _ias_pin, int _iat_pin, int _sample_rate,
@@ -145,6 +146,7 @@ final class AdcAirspeed extends Thread {
      *    The temperature sensor is a KTY83-110
      */
     h_ias = ioio.openAnalogInput(ias_pin);
+    h_ias.setBuffer(ias_samples);
     h_iat = ioio.openAnalogInput(iat_pin);
 
     if (h_ias == null || h_iat == null) return false;
@@ -154,12 +156,19 @@ final class AdcAirspeed extends Thread {
 
  
   private void loop() throws ConnectionLostException, InterruptedException {
-    int ias, iat=0;
-    int loop_count = 0;
+    int ias;
+    int iat=0;
+    int loop_count=0;
+
     while (true) {
       if ((loop_count % 10) == 0)
         iat = (int)(h_iat.read() * 1024);
-      ias   = (int)(h_ias.read() * 1024);
+      else
+        iat = 0;
+
+      float sum=0;
+      for (int j=0; j<ias_samples; j++) sum += h_ias.readBuffered();
+      ias = (int)(sum * (1024/ias_samples));
 
       listener.onAdcAirspeedValues(ias, iat);
       

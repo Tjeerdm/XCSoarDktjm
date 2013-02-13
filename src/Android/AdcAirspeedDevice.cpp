@@ -86,7 +86,7 @@ AdcAirspeedDevice::AdcAirspeedDevice(unsigned _index,
     for (unsigned i=0; i<sizeof offsets/sizeof offsets[0]; i++)
       offsets[i] = fixed(0);
     doingCal = true;
-    calDelay = 250; // wait for things to stabilize before calibrating
+    calDelay = 4*60+5; // wait for things to stabilize before calibrating
   }
 }
 
@@ -121,7 +121,7 @@ AdcAirspeedDevice::writeIasConfig()
     fprintf(fp, "sensitivity=%d\n", offsets[iat_min] < fixed(512) ? 7075 : -3184); // mpx5010dp or mpxv7002dp 
 
     for (unsigned i=0; i<sizeof offsets/sizeof offsets[0]; i++)
-      if (offsets[i] != fixed(0)) fprintf(fp, "%d %d\n", i, (int)offsets[i]);
+      if (offsets[i] != fixed(0)) fprintf(fp, "%d %.2lf\n", i, offsets[i]);
 
     fclose(fp);
   }
@@ -134,8 +134,7 @@ AdcAirspeedDevice::readIasConfig()
   char path[MAX_PATH];
   LocalPath(path, _T("IOIO-analog-airspeed-sensor.txt"));
   FILE *fp = fopen(path, "r");
-  unsigned iat = 0, offset = 0;
-  bool fill = false;
+
   if (fp) {
     // skip header, ias and iat pins.
     fgets(path, sizeof path, fp);
@@ -149,67 +148,75 @@ AdcAirspeedDevice::readIasConfig()
     sensitivity = fixed(atoi(s+12)) / 100000; // from milli-Pascal to hPa
 
     // read list of temp and offset pairs
+    unsigned iat = 0;
+    fixed offset;
     while (fgets(path, sizeof path, fp)) {
-      sscanf(path, "%u %u", &iat, &offset);
+      if (*path == '#' || *path == 0) continue;
+
+      sscanf(path, "%u %lf", &iat, &offset);
+
       if (iat > 1023 || offsets[iat] != fixed(0)) {
         Message::AddMessage(_T("IOIO-analog-airspeed-sensor.txt: error in data"));
         return false;
       }
-      if (!fill) {
-        fill = true;
-        // fill all entries before the first with the same data, assumes data in file is sorted.
-        for (unsigned i=0; i<iat;i++) offsets[i] = fixed(offset);
-      }
-      offsets[iat] = fixed(offset);
+
+      offsets[iat] = offset;
+
+      if (offsets[0] != fixed(0)) continue;
+
+      // fill all entries before the first with the same data, assumes data in file is sorted.
+      for (unsigned i=0; i<iat;i++) offsets[i] = offset;
     }
+
     // fill all remaining entries.
-    while (iat < sizeof offsets/sizeof offsets[0]) offsets[iat++] = fixed(offset);
+    while (iat < sizeof offsets/sizeof offsets[0]) offsets[iat++] = offset;
     return true;
   }
   return false;
 }
 
-static fixed dyn = fixed(0);
+static unsigned iat = 0;
 void
-AdcAirspeedDevice::onAdcAirspeedValues(int ias, int iat)
+AdcAirspeedDevice::onAdcAirspeedValues(int _ias, int _iat)
 {
-  static fixed lpf_ias = fixed(0);
-  static fixed lpf_iat = fixed(0);
+  fixed ias = fixed(_ias);
 
-  if (ias && iat) {
+  if (_iat) {
+    if (!temperature_filter.Update(fixed(_iat)))
+      iat = (unsigned)_iat;
+    else
+      iat = (unsigned)temperature_filter.Average();
+  } else {
+    if (!iat) return;
+  }
 
-    if (lpf_iat == fixed(0)) {
-      lpf_iat = fixed(iat);     // starting up
-      lpf_ias = fixed(ias);     // init low pass filters to speed things up
+  if (doingCal) {
+    if (!airspeed_filter.Update(ias)) return;
+
+    if (calDelay % 60 == 0)
+      Message::AddMessage(_T("IOIO AdcAirspeed: calibrating airspeed sensor"));
+
+    if (calDelay < 0) {
+      if (offsets[iat] == fixed(0)) // new value ?
+        offsets[iat] = airspeed_filter.Average();
     } else {
-      lpf_iat = LowPassFilter(lpf_iat, fixed(iat), fixed(0.1));
-    }
-
-    int lpf_iatI = (int)lpf_iat;
-    if (doingCal) {
-      lpf_ias = LowPassFilter(lpf_ias, fixed(ias), fixed(0.1));
-
       calDelay--;
-      if (calDelay % 60 == 0)
-        Message::AddMessage(_T("IOIO AdcAirspeed: calibrating airspeed sensor"));
-
-      if (calDelay < 0) {
-        if (offsets[lpf_iatI] == fixed(0)) // new value ?
-          offsets[lpf_iatI] = lpf_ias;
-      }
     }
-    else {
-      ScopeLock protect(device_blackboard->mutex);
-      NMEAInfo &basic = device_blackboard->SetRealState(index);
-      basic.UpdateClock();
-      basic.alive.Update(basic.clock);
+  } else {
+    ScopeLock protect(device_blackboard->mutex);
+    NMEAInfo &basic = device_blackboard->SetRealState(index);
+    basic.UpdateClock();
+    basic.alive.Update(basic.clock);
 
-      dyn = Half(dyn + ((fixed(ias) - offsets[lpf_iatI]) * sensitivity));
-//      if (dyn < fixed(0.31)) dyn = fixed(0);      // suppress speeds below ~25 km/h
-      if (dyn < fixed(0)) dyn = -dyn;
-      basic.ProvideDynamicPressure(AtmosphericPressure::HectoPascal(dyn));
-      device_blackboard->ScheduleMerge();
-    }
+    fixed dyn = (ias - offsets[iat]) * sensitivity;
+#if 0
+    if (dyn < fixed(0.31)) dyn = fixed(0);      // suppress speeds below ~25 km/h
+#else
+    basic.acceleration.ProvideGLoad(dyn, true);
+    if (dyn < fixed(0)) dyn = -dyn;
+#endif
+    basic.ProvideDynamicPressure(AtmosphericPressure::HectoPascal(dyn));
+    device_blackboard->ScheduleMerge();
   }
 }
 

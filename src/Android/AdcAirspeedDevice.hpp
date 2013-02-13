@@ -29,6 +29,7 @@ Copyright_License {
 #include "Compiler.h"
 #include "Math/fixed.hpp"
 #include <stdio.h>
+#include "Math/WindowFilter.hpp"
 
 #include <jni.h>
 
@@ -54,10 +55,12 @@ public:
 private:
   bool readIasConfig();
   void writeIasConfig();
-  fixed sensitivity;              // in hPascal per bit, so should be called insensitivity...
+  fixed sensitivity;                // in hPascal per bit, so should be called insensitivity...
   long calDelay;
   bool doingCal;
-  fixed offsets[1024]; // for all possible temp sensor values.
+  fixed offsets[1024];              // for all possible temp sensor values.
+  WindowFilter<16> temperature_filter;
+  WindowFilter<64> airspeed_filter; // calibration only
 
   /* virtual methods from class AdcAirspeedListener */
   virtual void onAdcAirspeedValues(int ias, int iat) override;
