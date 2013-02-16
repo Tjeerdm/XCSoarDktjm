@@ -220,7 +220,7 @@ public:
                          short h_dest,
                          const int slope_fact, const short h_ceiling,
                          const short h_safety,
-                         unsigned& int_x, unsigned& int_y, short &h_int,
+                         RasterLocation &_location, short &h_int,
                          const bool can_climb) const;
 
   gcc_pure RasterLocation
@@ -236,13 +236,17 @@ protected:
    */
   bool LoadWorldFile(const TCHAR *path);
 
+private:
   /**
    * Get field (not interpolated) directly, without bringing tiles to front.
    * @param px X position/256
    * @param px Y position/256
    * @param tile_index Remember position of active tile, or -1 for overview
+   * @return the terrain altitude and a flag that is true when the
+   * value was loaded from a "fine" tile
    */
-  short GetFieldDirect(const unsigned px, const unsigned py, int &tile_index) const;
+  gcc_pure
+  std::pair<short, bool> GetFieldDirect(unsigned px, unsigned py) const;
 
 public:
   bool LoadOverview(const char *path, const TCHAR *world_file,
