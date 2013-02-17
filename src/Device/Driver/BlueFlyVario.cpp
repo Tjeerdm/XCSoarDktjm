@@ -92,6 +92,7 @@ fixed ComputeNoncompVario(const fixed pressure, const fixed d_pressure)
   return fixed(FACTOR * pow(pressure, EXPONENT) * d_pressure);
 }
 
+volatile fixed level_acc;
 bool
 BlueFlyDevice::ParsePRS(const char *content, NMEAInfo &info)
 {
@@ -102,7 +103,17 @@ BlueFlyDevice::ParsePRS(const char *content, NMEAInfo &info)
   if (endptr != content) {
     AtmosphericPressure pressure = AtmosphericPressure::Pascal(fixed(value));
 
-    kalman_filter.Update(pressure.GetHectoPascal(), fixed(0.5), fixed(0.02));
+
+
+#if 0
+    fixed acc = std::abs(level_acc - fixed(0.997)) * 400;
+    if (acc > 10) acc = 10;
+    if (acc < 0.25) acc = 0.25;
+    kalman_filter.SetAccelerationVariance(acc);	// Process kalman_q
+//    info.acceleration.ProvideGLoad(acc, true);
+#endif
+
+    kalman_filter.Update(pressure.GetHectoPascal(), fixed(0.5), fixed(0.02));	// Sensor kalman_r
 
     info.ProvideNoncompVario(ComputeNoncompVario(kalman_filter.GetXAbs(),
                                                  kalman_filter.GetXVel()));
@@ -125,7 +136,7 @@ BlueFlyDevice::ParseNMEA(const char *line, NMEAInfo &info)
 
 BlueFlyDevice::BlueFlyDevice()
 {
-  kalman_filter.SetAccelerationVariance(fixed(5.0));
+  kalman_filter.SetAccelerationVariance(fixed(2.0));	// Process kalman_q
 }
 
 

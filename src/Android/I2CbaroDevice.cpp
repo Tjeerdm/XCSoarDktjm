@@ -30,6 +30,11 @@ Copyright_License {
 #include "LogFile.hpp"
 #include "Profile/DeviceConfig.hpp"
 
+#include "LocalPath.hpp"
+#include <windef.h>
+static FILE* fp;
+static int c;
+
 static Java::TrivialClass i2cbaro_class;
 static jmethodID i2cbaro_ctor, close_method;
 
@@ -116,7 +121,25 @@ I2CbaroDevice::onI2CbaroValues(unsigned sensor, AtmosphericPressure pressure)
        param = fixed(0.5);
     }
 
-    kalman_filter.Update(pressure.GetHectoPascal(), param);
+    fixed p = pressure.GetHectoPascal();
+
+#if 0
+if (c == 0) {
+  char path[MAX_PATH];
+  LocalPath(path, _T("bmp085.trace"));
+  fp = fopen(path, "w");
+}
+if (fp) {
+  fprintf(fp, "%f,\n", p);
+  if (c == 3000) {
+    fclose(fp);
+    fp = NULL;
+  }
+  c++;
+}
+#endif
+
+    kalman_filter.Update(p, param);
 
     switch (press_use) {
       case DeviceConfig::PressureUse::NONE:
