@@ -32,8 +32,6 @@ Copyright_License {
 
 #include "LocalPath.hpp"
 #include <windef.h>
-static FILE* fp;
-static int c;
 
 static Java::TrivialClass i2cbaro_class;
 static jmethodID i2cbaro_ctor, close_method;
@@ -124,6 +122,8 @@ I2CbaroDevice::onI2CbaroValues(unsigned sensor, AtmosphericPressure pressure)
     fixed p = pressure.GetHectoPascal();
 
 #if 0
+static FILE* fp;
+static int c;
 if (c == 0) {
   char path[MAX_PATH];
   LocalPath(path, _T("bmp085.trace"));
