@@ -131,13 +131,19 @@ struct MetaData {
 
 // Groups:
 //   Altitude: e_HeightGPS,e_HeightAGL,e_H_Terrain,e_H_Baro,e_H_QFE,e_FlightLevel,e_Barogram
-//   Aircraft info: e_Bearing,e_Speed_GPS,e_Track_GPS,e_AirSpeed_Ext,e_Load_G,e_WP_BearingDiff,e_Speed,e_Horizon
-//   LD: e_GR_Instantaneous,e_GR_Cruise,e_Fin_GR_TE,e_Fin_GR,e_WP_GR,e_LD,e_GR_Avg
-//   Vario: e_Thermal_30s,e_TL_Avg,e_TL_Gain,e_TL_Time,e_Thermal_Avg,e_Thermal_Gain,e_Climb_Avg,e_VerticalSpeed_GPS,e_VerticalSpeed_Netto,e_Vario_spark,e_NettoVario_spark,e_CirclingAverage_spark,e_ThermalBand
-//   Wind: e_WindSpeed_Est,e_WindBearing_Est,e_HeadWind,e_Temperature,e_HumidityRel,e_Home_Temperature
-//   MacCready: e_MacCready,e_WP_Speed_MC,e_Climb_Perc,e_Act_Speed,NextLegEqThermal
-//   Nav: e_WP_Distance,e_WP_AltDiff,e_WP_MC0AltDiff,e_WP_H,e_WP_AltReq,e_Fin_AltDiff,e_Fin_AltReq,e_SpeedTaskAvg,e_CC_SpeedInst,e_CC_Speed,e_Fin_Distance,e_AA_Time,e_AA_TimeDiff,e_AA_DistanceMax,e_AA_DistanceMin,e_AA_SpeedMax,e_AA_SpeedMin,e_Fin_AA_Distance,e_AA_SpeedAvg,e_Home_Distance,e_OC_Distance,e_TaskProgress
-//   Waypoint: e_WP_Name,e_TimeSinceTakeoff,e_TimeLocal,e_TimeUTC,e_Fin_Time,e_Fin_ETE_VMG,e_WP_Time,e_WP_ETE_VMG,e_Fin_TimeLocal,e_WP_TimeLocal,e_RH_Trend,e_TaskMaxHeightTime
+//   Aircraft status: e_Speed_GPS,e_Track_GPS,e_AirSpeed_Ext,e_Load_G,e_WP_BearingDiff,e_Speed,e_Horizon
+//   GR: e_GR_Instantaneous,e_GR_Cruise,e_Fin_GR_TE,e_Fin_GR,e_WP_GR,e_LD,e_GR_Avg
+//   Vario: e_Thermal_30s,e_TL_Avg,e_TL_Gain,e_TL_Time,e_Thermal_Avg,e_Thermal_Gain,e_Climb_Avg,e_VerticalSpeed_GPS,
+//          e_VerticalSpeed_Netto,e_Vario_spark,e_NettoVario_spark,e_CirclingAverage_spark,e_ThermalBand,THERMAL_ASSISTANT
+//   Wind: e_WindSpeed_Est,e_WindBearing_Est,e_HeadWind,e_Temperature,e_HumidityRel,e_Home_Temperature,WIND_ARROW,HeadWindSimplified
+//   MacCready: e_MacCready,e_WP_Speed_MC,e_Climb_Perc,e_Act_Speed,NextLegEqThermal,CruiseEfficiency
+//   Nav: e_Bearing,NEXT_RADIAL,e_WP_Distance,e_WP_AltDiff,e_WP_MC0AltDiff,e_WP_H,e_WP_AltReq,e_Fin_AltDiff,e_Fin_AltReq,
+//        e_Fin_Distance,e_Home_Distance,
+//   Comp&Task: e_SpeedTaskAvg,e_CC_SpeedInst,e_CC_Speed,e_AA_Time,e_AA_TimeDiff,e_AA_DistanceMax,e_AA_DistanceMin,e_AA_SpeedMax,
+//              e_AA_SpeedMin,e_Fin_AA_Distance,e_AA_SpeedAvg,e_OC_Distance,e_TaskProgress,
+//              START_OPEN_TIME,START_OPEN_ARRIVAL_TIME
+//   Waypoint: e_WP_Name,e_TimeSinceTakeoff,e_TimeLocal,e_TimeUTC,e_Fin_Time,e_Fin_ETE_VMG,e_WP_Time,e_WP_ETE_VMG,e_Fin_TimeLocal,
+//             e_WP_TimeLocal,e_RH_Trend,e_TaskMaxHeightTime
 //   Team: e_Team_Code,e_Team_Bearing,e_Team_BearingDiff,e_Team_Range
 //   Gadget: e_Battery,e_CPU_Load
 //   Alternates: e_Alternate_1_Name,e_Alternate_2_Name,e_Alternate_1_GR
@@ -177,7 +183,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
 
   // e_Bearing
   {
-    N_("Bearing"),
+    N_("Next Bearing"),
     N_("Bearing"),
     N_("True bearing of the next waypoint.  For AAT tasks, this is the true bearing to the target within the AAT sector."),
     UpdateInfoBoxBearing,
@@ -201,8 +207,8 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
     N_("GR Cruise"),
     N_("The distance from the top of the last thermal, divided by the altitude lost since the top of the last thermal. Negative values indicate climbing cruise (height gain since leaving the last thermal). If the vertical speed is close to zero, the displayed value is '---'."),
     UpdateInfoBoxGRCruise,
-    e_Fin_GR_TE, // Final LD
-    e_GR_Instantaneous, // LD Inst
+    e_Fin_GR_TE, // Final GR
+    e_GR_Instantaneous, // GR Inst
   },
 
   // e_Speed_GPS
@@ -337,10 +343,10 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
 
   // e_Fin_GR_TE
   {
-    N_("Final GR"),
-    N_("Fin GR"),
-    N_("The required glide ratio over ground to finish the task, given by the distance to go divided by the height required to arrive at the safety arrival height."),
-    UpdateInfoBoxFinalGRTE,
+    _T("Final GR (TE) deprecated"),
+    _T("---"),
+    _T("Deprecated, there is no TE compensation on GR, you should switch to the \"Final GR\" info box."),
+    UpdateInfoBoxFinalGR,
     e_Fin_GR, // Final GR
     e_GR_Cruise, // GR Cruise
   },
@@ -399,7 +405,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   {
     N_("Wind speed"),
     N_("Wind V"),
-    N_("Wind speed estimated by XCSoar. (Touch-screen/PC only) Manual adjustment is possible by pressing the up/down cursor keys to adjust magnitude and left/right cursor keys to adjust bearing when the InfoBox is active. Pressing the enter cursor key saves the wind value as the initial value when XCSoar next starts."),
+    N_("Wind speed estimated by XCSoar. Manual adjustment is possible with the connected InfoBox dialogue. Pressing the up/down cursor keys to cycle through settings, adjust the values with left/right cursor keys."),
     UpdateInfoBoxWindSpeed,
     wind_infobox_panels,
     e_WindBearing_Est, // Wind B
@@ -410,7 +416,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   {
     N_("Wind bearing"),
     N_("Wind Brng"),
-    N_("Wind bearing estimated by XCSoar. (Touch-screen/PC only) Manual adjustment is possible by pressing the up/down cursor keys to adjust bearing when the InfoBox is active."),
+    N_("Wind bearing estimated by XCSoar. Manual adjustment is possible with the connected InfoBox dialogue. Pressing the up/down cursor keys to cycle through settings, adjust the values with left/right cursor keys."),
     UpdateInfoBoxWindBearing,
     wind_infobox_panels,
     HeadWindSimplified,
@@ -420,7 +426,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   // e_AA_Time
   {
     N_("AAT time"),
-    N_("AAT time"),
+    N_("AAT Time"),
     N_("Assigned Area Task time remaining. Goes red when time remaining has expired."),
     UpdateInfoBoxTaskAATime,
     e_AA_TimeDiff, // AA dTime
@@ -681,11 +687,11 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   // e_LD
   {
     N_("L/D vario"),
-    N_("L/D vario"),
+    N_("L/D Vario"),
     N_("Instantaneous lift/drag ratio, given by the indicated airspeed divided by the total energy vertical speed, when connected to an intelligent variometer. Negative values indicate climbing cruise. If the total energy vario speed is close to zero, the displayed value is '---'."),
     UpdateInfoBoxLDVario,
     e_GR_Avg, // GR Avg
-    e_WP_GR, // Next LD
+    e_WP_GR, // Next GR
   },
 
   // e_Speed
@@ -781,7 +787,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   // e_Climb_Avg
   {
     N_("Thermal average over all"),
-    N_("TC All"),
+    N_("TAll Avg"),
     N_("Time-average climb rate in all thermals."),
     UpdateInfoBoxThermalAllAvg,
     e_VerticalSpeed_GPS, // Vario
@@ -818,8 +824,8 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
     N_("Fin GR"),
     N_("The required glide ratio over ground to finish the task, given by the distance to go divided by the height required to arrive at the safety arrival height."),
     UpdateInfoBoxFinalGR,
-    e_WP_GR, // Next LD
-    e_Fin_GR_TE, // Fin LD
+    e_WP_GR, // Next GR
+    e_Fin_GR_TE, // Fin GR
   },
 
   // e_Alternate_1_Name
@@ -867,9 +873,9 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   {
     N_("GR average"),
     N_("GR Avg"),
-    N_("The distance made in the configured period of time , divided by the altitude lost since then. Negative values are shown as ^^^ and indicate climbing cruise (height gain). Over 200 of L/D the value is shown as +++ . You can configure the period of averaging in the system setup. Suggested values are 60, 90 or 120. Lower values will be closed to L/D INST, and higher values will be closed to L/D Cruise. Notice that the distance is NOT the straight line between your old and current position, it's exactly the distance you have made even in a zigzag glide. This value is not calculated while circling."),
+    N_("The distance made in the configured period of time , divided by the altitude lost since then. Negative values are shown as ^^^ and indicate climbing cruise (height gain). Over 200 of GR the value is shown as +++ . You can configure the period of averaging in the system setup. Suggested values are 60, 90 or 120. Lower values will be closed to GR Inst, and higher values will be closed to GR Cruise. Notice that the distance is NOT the straight line between your old and current position, it's exactly the distance you have made even in a zigzag glide. This value is not calculated while circling."),
     UpdateInfoBoxGRAvg,
-    e_GR_Instantaneous, // LD Inst
+    e_GR_Instantaneous, // GR Inst
     e_LD, // LD Vario
   },
 
@@ -916,7 +922,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   // e_WP_H
   {
     N_("Next altitude arrival"),
-    N_("WP alt.A"),
+    N_("WP AltA"),
     N_("Absolute arrival altitude at the next waypoint in final glide.  For AAT tasks, the target within the AAT sector is used."),
     UpdateInfoBoxNextAltitudeArrival,
     e_WP_AltReq, // WP AltR
@@ -1140,7 +1146,7 @@ static constexpr MetaData meta_data[NUM_TYPES] = {
   {
     N_("Wind arrow"),
     N_("Wind"),
-    N_("Wind speed estimated by XCSoar. (Touch-screen/PC only) Manual adjustment is possible by pressing the up/down cursor keys to adjust magnitude and left/right cursor keys to adjust bearing when the InfoBox is active. Pressing the enter cursor key saves the wind value as the initial value when XCSoar next starts."),
+    N_("Wind speed estimated by XCSoar. Manual adjustment is possible with the connected InfoBox dialogue. Pressing the up/down cursor keys to cycle through settings, adjust the values with left/right cursor keys."),
     IBFHelper<InfoBoxContentWindArrow>::Create,
     WIND_ARROW,
     WIND_ARROW,
