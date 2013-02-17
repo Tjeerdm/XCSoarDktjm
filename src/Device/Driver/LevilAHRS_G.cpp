@@ -42,6 +42,8 @@ ErrorMessage(gcc_unused unsigned code)
   Message::AddMessage(_T("Levil AHRS: hardware error !"));
 }
 
+extern fixed level_acc;
+
 static bool
 ParseRPYL(NMEAInputLine &line, NMEAInfo &info)
 {
@@ -100,7 +102,8 @@ ParseRPYL(NMEAInputLine &line, NMEAInfo &info)
   info.attitude.heading_available.Update(info.clock);
   info.attitude.heading = Angle::Degrees(fixed(heading) / 10);
 
-  info.acceleration.ProvideGLoad(fixed(G) / 1000, true);
+  level_acc = fixed(G) / 1000; 
+  info.acceleration.ProvideGLoad(level_acc, true);
 
   return true;
 }
