@@ -160,7 +160,7 @@ GetVerticalSpeedFormat(Unit unit, bool include_unit, bool include_sign)
 {
   static const TCHAR *const format[2][2][2]= {
     //      0 0 0       0 0 1            0 1 0          0 1 1
-    { { _T("%.1f"), _T("%+.1f") }, { _T("%.1f %s"), _T("%+.1f %s") } },
+    { { _T("%.2f"), _T("%+.2f") }, { _T("%.2f %s"), _T("%+.2f %s") } },
     //      1 0 0       1 0 1            1 1 0          1 1 1
     { { _T("%.0f"), _T("%+.0f") }, { _T("%.0f %s"), _T("%+.0f %s") } }
   };
