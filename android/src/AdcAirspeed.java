@@ -35,9 +35,9 @@
  *             12V  5
  *			9 12V
  *              6V  4
- *	   		8 Flarm-rs232
- *	     Spare  3
- *	  		7 Flarm-rs232
+ *	   		8 ADSB-rs232
+ *    Flarm-rsr232  3
+ *	  		7 ADSB-rs232
  *	   Current  2
  *			6 GND
  *	       GND  1
